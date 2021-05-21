@@ -1,11 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import Register from "./components/register";
 import Login from "./components/login";
 import CreateTask from "./components/createTask";
+import Task from "./components/task";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
 ReactDOM.render(
@@ -15,6 +15,9 @@ ReactDOM.render(
         <Switch>
           <Route path="/createTask">
             <CreateTask />
+          </Route>
+          <Route path="/task">
+            <Task />
           </Route>
           <Route path="/login">
             <Login />

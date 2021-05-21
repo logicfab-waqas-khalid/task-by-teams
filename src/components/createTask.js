@@ -15,10 +15,13 @@ import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GenericServices from "../Services/GenericServices";
 import UserServices from "../Services/UserServices";
 import axios from "axios";
+import Autosuggest from "react-autosuggest";
+import { CloseOutlined, EmailRounded } from "@material-ui/icons";
+//import { Autocomplete } from "@material-ui/lab";
 
 const genericServices = new GenericServices();
 
@@ -44,6 +47,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function CreateTask() {
   const [data, setData] = useState({
+    userId: "",
     createdBy: "",
     taskName: "",
     description: "",
@@ -52,8 +56,30 @@ export default function CreateTask() {
   });
   //const [focus, setFocus] = "";
   const [colValue, setColValue] = useState("");
-
+  //-----------------------------------------------------
+  const [regUsers, setRegUsers] = useState([]);
+  const [userEmails, setUserEmails] = useState([]);
+  const [filteredEmails, setFileredEmails] = useState([]);
   const classes = useStyles();
+
+  React.useEffect(() => {
+    genericServices
+      .get(`auth/`)
+      .then((data) => {
+        // const a = Object.entries(...data.email);
+        setRegUsers(data);
+        extractUserEmails(data);
+        //setRegUsers(a);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
+
+  const extractUserEmails = (data) => {
+    const emails = data.map((item) => item.email);
+    setUserEmails(emails);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -62,26 +88,36 @@ export default function CreateTask() {
     } else if (name == "description") {
       setData({ ...data, description: value });
     } else if (name == "collaborators") {
-      setColValue(value);
+      data.collaborators.push(value);
     } else if (name == "team") {
       setData({ ...data, team: value });
     }
-
     console.log(data);
+  };
+
+  const getRegUsers = (e) => {
+    const { name, value } = e.target;
+    console.log("its called", value);
+    const a = userEmails.filter((email) => email.includes(value));
+    setFileredEmails(a);
+    console.log(filteredEmails);
   };
 
   const addCollaborator = () => {
     const a = { ...data };
     a.collaborators.push(colValue);
     setData(a);
-    console.log(data.collaborators);
-    console.log(colValue);
   };
 
   const handleSubmit = () => {
-    setData({ ...data, createdBy: UserServices.getLoggedinfo().username });
+    const uId = UserServices.getLoggedinfo().userId;
+    data.userId = uId;
+    const uName = UserServices.getLoggedinfo().username;
+    console.log(uName);
+    setData({ ...data, createdBy: uName });
+
     genericServices.post(`task/createTask`, data).then((data) => {
-      window.location.href = "/createTask";
+      // window.location.href = "/createTask";
       console.log(data);
     });
   };
@@ -132,6 +168,7 @@ export default function CreateTask() {
             multiline
             rows={5}
             autoFocus
+            onChange={handleInputChange}
           />
           <TextField
             variant="filled"
@@ -143,8 +180,27 @@ export default function CreateTask() {
             name="collaborators"
             autoComplete="collaborators"
             autoFocus
-            onChange={handleInputChange}
+            onChange={getRegUsers}
           />
+          <datalist id="browsers">
+            {filteredEmails.map((email) => {
+              return <option value={email}></option>;
+            })}
+          </datalist>
+
+          <Box mt={2} mb={2}>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              fullWidth
+              name="collaborators"
+              onChange={handleInputChange}
+            >
+              {filteredEmails.map((email) => {
+                return <MenuItem value={email}>{email}</MenuItem>;
+              })}
+            </Select>
+          </Box>
 
           <Button variant="contained" color="yellow" onClick={addCollaborator}>
             Add
@@ -158,9 +214,9 @@ export default function CreateTask() {
               name="team"
               onChange={handleInputChange}
             >
-              <MenuItem value={"teamA"}>Team A</MenuItem>
-              <MenuItem value={"teamB"}>Team B</MenuItem>
-              <MenuItem value={"teamC"}>Team C</MenuItem>
+              <MenuItem value="teamA">Team A</MenuItem>
+              <MenuItem value="teamB">Team B</MenuItem>
+              <MenuItem value="teamC">Team C</MenuItem>
             </Select>
           </Box>
           <Button
@@ -177,6 +233,13 @@ export default function CreateTask() {
             Create
           </Button>
         </form>
+        <Grid container>
+          <Grid item>
+            <Link href="/createTask" variant="body2">
+              <h2>My TASKS</h2>
+            </Link>
+          </Grid>
+        </Grid>
       </div>
     </Container>
   );
