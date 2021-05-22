@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function Task() {
   const genericServices = new GenericServices();
-  const [taskList, setTaskList] = useState();
+  const [taskList, setTaskList] = useState([]);
 
   useEffect(() => {
     handleGetTaskList();
@@ -16,7 +16,7 @@ export default function Task() {
       .get("task/" + id)
       .then((data) => {
         console.log(data);
-        //setTaskList(data);
+        setTaskList(data);
       })
       .catch((error) => {
         console.log(error);
@@ -32,8 +32,14 @@ export default function Task() {
           alignItems: "center",
         }}
       >
-        <h1> My Tasks </h1>
-        {taskList}
+        {taskList.map((item) => {
+          return (
+            <h1>
+              {item.description}
+              <br />
+            </h1>
+          );
+        })}
       </div>
     </div>
   );
